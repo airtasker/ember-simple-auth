@@ -65,6 +65,16 @@ export default Base.extend({
   identificationAttributeName: 'email',
 
   /**
+    The identification attribute name.
+
+    @property identificationAttributeName
+    @type String
+    @default undefined
+    @public
+  */
+  remoteIdentificationAttributeName: undefined,
+
+  /**
     Restores the session from a set of session properties; __will return a
     resolving promise when there's a non-empty `token` and a non-empty
     `email` in the `properties`__ and a rejecting promise otherwise.
@@ -103,12 +113,17 @@ export default Base.extend({
   */
   authenticate(credentials) {
     return new RSVP.Promise((resolve, reject) => {
-      const { resourceName, identificationAttributeName } = this.getProperties('resourceName', 'identificationAttributeName');
+      const { resourceName, identificationAttributeName, remoteIdentificationAttributeName } = this.getProperties('resourceName', 'identificationAttributeName', 'remoteIdentificationAttributeName');
       const data         = {};
       data[resourceName] = {
         password: credentials.password
       };
-      data[resourceName][identificationAttributeName] = credentials.identification;
+
+      if(isEmpty(remoteIdentificationAttributeName)){
+        data[resourceName][identificationAttributeName] = credentials.identification;
+      } else {
+        data[resourceName][remoteIdentificationAttributeName] = credentials.identification;
+      }
 
       this.makeRequest(data).then(function(response) {
         run(null, resolve, response);
